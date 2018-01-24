@@ -17,8 +17,7 @@ import android.widget.RelativeLayout;
  * Created by Luka on 24.1.2018.
  */
 public class GooglePlayRecyclerView extends RelativeLayout {
-
-    private  float imageScale;
+    
     /**
      * The end of image movement.
      * When this threshold is reached the @gBackground stops moving
@@ -45,7 +44,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
      */
     public ImageView gBackground;
 
-
+    private  float imageScale;
     private int endOffsetMargin;
     private View rootView;
     private RecyclerView gRecyclerView;
