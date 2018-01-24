@@ -4,7 +4,8 @@ Project that mimics the google play animated recylcer view
 
 Usage:
 ```
-<..
+<com.timelesssoftware.gplayrecyclerview.GooglePlayRecyclerView 
+...
 app:start_background_offset="15dp" - starting background image margin
 app:end_background_offset="-35dp" - end background image margin
 app:end_background_alpha="0.1" - end background alpha
