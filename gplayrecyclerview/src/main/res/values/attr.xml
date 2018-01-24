@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="GooglePlayRecyclerView">
+        <attr name="start_offset" format="dimension" />
+        <attr name="start_background_offset" format="dimension" />
+        <attr name="end_background_alpha" format="float" />
+        <attr name="background_step" format="integer" />
+        <attr name="end_background_offset" format="dimension" />
+        <attr name="image" format="integer" />
+        <attr name="image_scale" format="float" />
+    </declare-styleable>
+</resources>
