@@ -4,7 +4,6 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/constraint_layout"
     android:layout_width="match_parent"
-    android:background="#3f51b5"
     android:layout_height="match_parent">
 
     <ImageView

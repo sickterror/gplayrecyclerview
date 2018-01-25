@@ -5,8 +5,10 @@ import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -18,7 +20,11 @@ import android.widget.RelativeLayout;
  */
 public class GooglePlayRecyclerView extends RelativeLayout {
 
-    private  float imageScale;
+
+    private static final String TAG = "gPlayRv";
+    private int backgroundColor;
+
+    private float imageScale;
     /**
      * The end of image movement.
      * When this threshold is reached the @gBackground stops moving
@@ -45,7 +51,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
      */
     public ImageView gBackground;
 
-
+    private RelativeLayout mainLayout;
     private int endOffsetMargin;
     private View rootView;
     private RecyclerView gRecyclerView;
@@ -53,6 +59,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
     private GooglePlayRecyclerViewScrollListener googlePlayRecyclerViewScrollListener;
     private LinearLayoutManager layout;
     private Drawable gDrawable;
+    private int scrollOfset = 0;
 
     /**
      * Instantiates a new Google play recycler view.
@@ -85,6 +92,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
             gDrawable = typedArray.getDrawable(R.styleable.GooglePlayRecyclerView_image);
             endBackgroundAlpha = typedArray.getFloat(R.styleable.GooglePlayRecyclerView_end_background_alpha, 0);
             bacKgroundThreshold = typedArray.getInt(R.styleable.GooglePlayRecyclerView_background_step, 2);
+            backgroundColor = typedArray.getColor(R.styleable.GooglePlayRecyclerView_background_color, 2);
             endOffsetMargin = dpToPixels(endOffsetAttr);
             startOffset = dpToPixels(startingOffsetAttr);
             startBackgroundOffset = dpToPixels(startBackgroundAttr);
@@ -99,6 +107,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
         rootView = inflate(context, R.layout.google_play_rv, this);
         gRecyclerView = rootView.findViewById(R.id.gp_rv);
         gRecyclerView.setPadding(startOffset, 0, 0, 0);
+        mainLayout = findViewById(R.id.constraint_layout);
         gBackground = rootView.findViewById(R.id.gp_background);
         gBackground.setImageDrawable(gDrawable);
         gBackground.setScaleX(imageScale);
@@ -107,6 +116,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
         gRecyclerView.setLayoutManager(layout);
         gRecyclerView.addOnScrollListener(onScrollListener);
         setMarginsToChild(gBackground, startBackgroundOffset);
+        mainLayout.setBackgroundColor(backgroundColor);
     }
 
     /**
@@ -128,6 +138,13 @@ public class GooglePlayRecyclerView extends RelativeLayout {
         return adapter;
     }
 
+    public LinearLayoutManager getLayout() {
+        return layout;
+    }
+
+    public RecyclerView getgRecyclerView() {
+        return gRecyclerView;
+    }
 
     /**
      * Sets google play recycler view scroll listener.
@@ -141,7 +158,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
     /**
      * The interface Google play recycler view scroll listener.
      */
-    interface GooglePlayRecyclerViewScrollListener {
+    public interface GooglePlayRecyclerViewScrollListener {
 
         /**
          * On scroll state changed.
@@ -200,21 +217,24 @@ public class GooglePlayRecyclerView extends RelativeLayout {
             if (googlePlayRecyclerViewScrollListener != null)
                 googlePlayRecyclerViewScrollListener.onScrolled(recyclerView, dx, dy);
 
-            int marginToAnimate = recyclerView.computeHorizontalScrollOffset() / bacKgroundThreshold;
+            //int marginToAnimate = recyclerView.computeHorizontalScrollOffset() / bacKgroundThreshold;
+            int marginToAnimate = scrollOfset / bacKgroundThreshold;
             LayoutParams params = (LayoutParams) gBackground.getLayoutParams();
             params.leftMargin = startBackgroundOffset - marginToAnimate;
             //No need to change values
-            if (params.leftMargin > endOffsetMargin) {
+            if (params.leftMargin >= endOffsetMargin) {
                 gBackground.setLayoutParams(params);
                 int alpha = calculateAlpha(startOffset - recyclerView.computeHorizontalScrollOffset());
                 gBackground.setAlpha(alpha);
             }
+            scrollOfset += dx;
         }
     };
 
     private int calculateAlpha(float currentMargin) {
         int endOffset = (endOffsetMargin < 0 ? -endOffsetMargin : endOffsetMargin);
         float calc = ((currentMargin + endOffset) / (startOffset + endOffset));
+        Log.i(TAG, "calc : " + calc + "");
         if (calc <= endBackgroundAlpha)
             return (int) (255 * endBackgroundAlpha);
         return (int) (255 * calc);

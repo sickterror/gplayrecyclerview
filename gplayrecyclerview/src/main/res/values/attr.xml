@@ -8,5 +8,6 @@
         <attr name="end_background_offset" format="dimension" />
         <attr name="image" format="integer" />
         <attr name="image_scale" format="float" />
+        <attr name="background_color" format="color" />
     </declare-styleable>
 </resources>
