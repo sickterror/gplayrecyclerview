@@ -4,8 +4,12 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.util.DisplayMetrics;
+import android.util.Log;
+import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
@@ -18,6 +22,12 @@ import com.timelesssoftware.gplayrecyclerview.GooglePlayRecyclerView;
 public class MainActivity extends AppCompatActivity {
 
     GooglePlayRecyclerView googlePlayRecyclerView;
+
+    private int mScreenWidth = 0;
+    private int mHeaderItemWidth = 0;
+    private int mCellWidth = 0;
+    private LinearLayoutManager mLLM;
+    private int firstItemPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +46,6 @@ public class MainActivity extends AppCompatActivity {
         googlePlayRecyclerView = findViewById(R.id.google_play_rv);
         googlePlayRecyclerView.setAdatper(new GAdapter());
         googlePlayRecyclerView.getAdapter().notifyDataSetChanged();
-
         googlePlayRecyclerView = findViewById(R.id.google_play_rv_2);
         googlePlayRecyclerView.setAdatper(new GAdapter());
         googlePlayRecyclerView.getAdapter().notifyDataSetChanged();
@@ -79,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return 10;
+            return 30;
         }
 
         public class GVHolder extends RecyclerView.ViewHolder {
@@ -88,7 +97,7 @@ public class MainActivity extends AppCompatActivity {
             public GVHolder(View itemView) {
                 super(itemView);
                 textView = (TextView) itemView.findViewById(R.id.text);
-                textView.setText("this is text" + getAdapterPosition());
+                textView.setText("this is text " + getAdapterPosition());
             }
         }
     }

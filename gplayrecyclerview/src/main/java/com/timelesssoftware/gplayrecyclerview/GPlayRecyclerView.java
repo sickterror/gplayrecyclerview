@@ -3,10 +3,12 @@ package com.timelesssoftware.gplayrecyclerview;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.AttributeSet;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.View;
@@ -18,6 +20,10 @@ import android.widget.RelativeLayout;
  */
 public class GooglePlayRecyclerView extends RelativeLayout {
 
+    private static final String TAG = "gPlayRv";
+    private int backgroundColor;
+
+    private float imageScale;
     /**
      * The end of image movement.
      * When this threshold is reached the @gBackground stops moving
@@ -44,7 +50,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
      */
     public ImageView gBackground;
 
-    private  float imageScale;
+    private RelativeLayout mainLayout;
     private int endOffsetMargin;
     private View rootView;
     private RecyclerView gRecyclerView;
@@ -52,6 +58,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
     private GooglePlayRecyclerViewScrollListener googlePlayRecyclerViewScrollListener;
     private LinearLayoutManager layout;
     private Drawable gDrawable;
+    private int scrollOfset = 0;
 
     /**
      * Instantiates a new Google play recycler view.
@@ -84,6 +91,8 @@ public class GooglePlayRecyclerView extends RelativeLayout {
             gDrawable = typedArray.getDrawable(R.styleable.GooglePlayRecyclerView_image);
             endBackgroundAlpha = typedArray.getFloat(R.styleable.GooglePlayRecyclerView_end_background_alpha, 0);
             bacKgroundThreshold = typedArray.getInt(R.styleable.GooglePlayRecyclerView_background_step, 2);
+            backgroundColor = typedArray.getColor(R.styleable.GooglePlayRecyclerView_background_color, 2);
+            //Convert dp to px
             endOffsetMargin = dpToPixels(endOffsetAttr);
             startOffset = dpToPixels(startingOffsetAttr);
             startBackgroundOffset = dpToPixels(startBackgroundAttr);
@@ -97,7 +106,8 @@ public class GooglePlayRecyclerView extends RelativeLayout {
     private void init(Context context) {
         rootView = inflate(context, R.layout.google_play_rv, this);
         gRecyclerView = rootView.findViewById(R.id.gp_rv);
-        gRecyclerView.setPadding(startOffset, 0, 0, 0);
+        //gRecyclerView.setPadding(startOffset, 0, 0, 0);
+        mainLayout = findViewById(R.id.constraint_layout);
         gBackground = rootView.findViewById(R.id.gp_background);
         gBackground.setImageDrawable(gDrawable);
         gBackground.setScaleX(imageScale);
@@ -106,7 +116,11 @@ public class GooglePlayRecyclerView extends RelativeLayout {
         gRecyclerView.setLayoutManager(layout);
         gRecyclerView.addOnScrollListener(onScrollListener);
         setMarginsToChild(gBackground, startBackgroundOffset);
+        mainLayout.setBackgroundColor(backgroundColor);
+        gRecyclerView.addItemDecoration(new PaddingItemDecoration(startOffset));
+        new GLinearSnapHelper().attachToRecyclerView(getgRecyclerView());
     }
+
 
     /**
      * Sets adatper.
@@ -127,6 +141,13 @@ public class GooglePlayRecyclerView extends RelativeLayout {
         return adapter;
     }
 
+    public LinearLayoutManager getLayout() {
+        return layout;
+    }
+
+    public RecyclerView getgRecyclerView() {
+        return gRecyclerView;
+    }
 
     /**
      * Sets google play recycler view scroll listener.
@@ -140,7 +161,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
     /**
      * The interface Google play recycler view scroll listener.
      */
-    interface GooglePlayRecyclerViewScrollListener {
+    public interface GooglePlayRecyclerViewScrollListener {
 
         /**
          * On scroll state changed.
@@ -168,8 +189,7 @@ public class GooglePlayRecyclerView extends RelativeLayout {
      * @return
      */
     private int dpToPixels(int dp) {
-        Resources r = getResources();
-        return (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, dp, r.getDisplayMetrics());
+        return (int) (dp * getResources().getDisplayMetrics().density);
     }
 
     /**
@@ -180,7 +200,6 @@ public class GooglePlayRecyclerView extends RelativeLayout {
      */
     private void setMarginsToChild(View v, int margin) {
         LayoutParams params = (LayoutParams) gBackground.getLayoutParams();
-        Log.d("margin", params.leftMargin + " / " + endOffsetMargin);
         params.leftMargin = margin;
         v.setLayoutParams(params);
     }
@@ -199,15 +218,17 @@ public class GooglePlayRecyclerView extends RelativeLayout {
             if (googlePlayRecyclerViewScrollListener != null)
                 googlePlayRecyclerViewScrollListener.onScrolled(recyclerView, dx, dy);
 
-            int marginToAnimate = recyclerView.computeHorizontalScrollOffset() / bacKgroundThreshold;
+            int marginToAnimate = scrollOfset / bacKgroundThreshold;
             LayoutParams params = (LayoutParams) gBackground.getLayoutParams();
             params.leftMargin = startBackgroundOffset - marginToAnimate;
             //No need to change values
-            if (params.leftMargin > endOffsetMargin) {
+            if (params.leftMargin >= endOffsetMargin) {
                 gBackground.setLayoutParams(params);
                 int alpha = calculateAlpha(startOffset - recyclerView.computeHorizontalScrollOffset());
                 gBackground.setAlpha(alpha);
             }
+            //Ge the scroll offset of the first itemViewHolder
+            scrollOfset += dx;
         }
     };
 
@@ -217,5 +238,22 @@ public class GooglePlayRecyclerView extends RelativeLayout {
         if (calc <= endBackgroundAlpha)
             return (int) (255 * endBackgroundAlpha);
         return (int) (255 * calc);
+    }
+
+
+    private class PaddingItemDecoration extends RecyclerView.ItemDecoration {
+        private final int size;
+
+        public PaddingItemDecoration(int size) {
+            this.size = size;
+        }
+
+        @Override
+        public void getItemOffsets(Rect outRect, View view, RecyclerView parent, RecyclerView.State state) {
+            super.getItemOffsets(outRect, view, parent, state);
+            if (parent.getChildAdapterPosition(view) == 0) {
+                outRect.left += size;
+            }
+        }
     }
 }
