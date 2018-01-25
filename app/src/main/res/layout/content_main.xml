@@ -8,7 +8,7 @@
     tools:context="com.timelesssoftware.googleplayrevyclerview.MainActivity"
     tools:showIn="@layout/activity_main">
 
-    <com.timelesssoftware.gplayrecyclerview.GooglePlayRecyclerView
+    <com.timelesssoftware.gplayrecyclerview.GPlayRecyclerView
         android:id="@+id/google_play_rv"
         android:layout_width="match_parent"
         android:layout_height="175dp"
@@ -18,10 +18,11 @@
         app:start_background_offset="15dp"
         app:end_background_offset="-50dp"
         app:end_background_alpha="0.5"
+        app:background_step="4"
         app:image="@drawable/test"
         app:start_offset="56dp" />
 
-    <com.timelesssoftware.gplayrecyclerview.GooglePlayRecyclerView
+    <com.timelesssoftware.gplayrecyclerview.GPlayRecyclerView
         android:id="@+id/google_play_rv_2"
         android:layout_width="match_parent"
         android:layout_height="250dp"
@@ -37,6 +38,6 @@
         app:background_step="2"
         app:image_scale="0.7"
         app:image="@drawable/test"
-        app:start_offset="86dp" />
+        app:start_offset="90dp" />
 
 </android.support.constraint.ConstraintLayout>

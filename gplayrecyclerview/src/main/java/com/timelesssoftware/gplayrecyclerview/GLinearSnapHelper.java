@@ -29,6 +29,9 @@ public class GLinearSnapHelper extends SnapHelper {
     @Override
     public int[] calculateDistanceToFinalSnap(
             @NonNull RecyclerView.LayoutManager layoutManager, @NonNull View targetView) {
+        int position = layoutManager.getPosition(targetView);
+
+        Log.d("position", position + "");
         int[] out = new int[2];
         if (layoutManager.canScrollHorizontally()) {
             out[0] = distanceToCenter(layoutManager, targetView,
@@ -42,6 +45,13 @@ public class GLinearSnapHelper extends SnapHelper {
                     getVerticalHelper(layoutManager));
         } else {
             out[1] = 0;
+        }
+        if(position == 0){
+            final int childCenter = getHorizontalHelper(layoutManager).getDecoratedStart(targetView)
+                    + (getHorizontalHelper(layoutManager).getDecoratedMeasurement(targetView) / 2);
+            if(childCenter > 500){
+                out[0] = -300;
+            }
         }
         return out;
     }
@@ -134,8 +144,10 @@ public class GLinearSnapHelper extends SnapHelper {
         } else {
             containerCenter = helper.getEnd() / 2;
         }
+        Log.d("target", helper.getStartAfterPadding() + " / " + helper.getEnd());
+        Log.d("test", containerCenter + "  /  " + childCenter + " / " + (childCenter - containerCenter));
         //Split containerCenter at half so we get the start of container
-        return childCenter - containerCenter - (containerCenter / 2);
+        return targetView.getLeft();
     }
 
     /**
@@ -146,7 +158,6 @@ public class GLinearSnapHelper extends SnapHelper {
      * @param helper        The {@link OrientationHelper} that is created from the LayoutManager.
      * @param velocityX     The velocity on the x axis.
      * @param velocityY     The velocity on the y axis.
-     *
      * @return The diff between the target scroll position and the current position.
      */
     private int estimateNextPositionDiffForFling(RecyclerView.LayoutManager layoutManager,
@@ -166,8 +177,7 @@ public class GLinearSnapHelper extends SnapHelper {
      *
      * @param layoutManager The {@link RecyclerView.LayoutManager} associated with the attached
      *                      {@link RecyclerView}.
-     * @param helper The relevant {@link OrientationHelper} for the attached {@link RecyclerView}.
-     *
+     * @param helper        The relevant {@link OrientationHelper} for the attached {@link RecyclerView}.
      * @return the child view that is currently closest to the center of this parent.
      */
     @Nullable
@@ -183,7 +193,7 @@ public class GLinearSnapHelper extends SnapHelper {
         if (layoutManager.getClipToPadding()) {
             center = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
         } else {
-            center = helper.getEnd()  / 2;
+            center = helper.getEnd() / 2;
         }
         int absClosest = Integer.MAX_VALUE;
 
@@ -211,7 +221,6 @@ public class GLinearSnapHelper extends SnapHelper {
      *                      {@link RecyclerView}.
      * @param helper        The relevant {@link OrientationHelper} for the attached
      *                      {@link RecyclerView.LayoutManager}.
-     *
      * @return A float value that is the average number of pixels needed to scroll by one view in
      * the relevant direction.
      */
@@ -252,7 +261,7 @@ public class GLinearSnapHelper extends SnapHelper {
         if (distance == 0) {
             return INVALID_DISTANCE;
         }
-        return 1f * distance / ((maxPos - minPos) + 1) ;
+        return 1f * distance / ((maxPos - minPos) + 1);
     }
 
     @NonNull
@@ -271,6 +280,7 @@ public class GLinearSnapHelper extends SnapHelper {
         }
         return mHorizontalHelper;
     }
+
     @Override
     public void attachToRecyclerView(@android.support.annotation.Nullable RecyclerView recyclerView) throws IllegalStateException {
         scroller = new Scroller(recyclerView.getContext(), new DecelerateInterpolator());
@@ -286,5 +296,4 @@ public class GLinearSnapHelper extends SnapHelper {
         Log.d("test", "" + out[0] + "/" + out[1]);
         return out;
     }
-
 }

@@ -7,9 +7,6 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
-import android.util.DisplayMetrics;
-import android.util.Log;
-import android.util.TypedValue;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.Menu;
@@ -17,17 +14,12 @@ import android.view.MenuItem;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
-import com.timelesssoftware.gplayrecyclerview.GooglePlayRecyclerView;
+import com.timelesssoftware.gplayrecyclerview.GPlayRecyclerView;
 
 public class MainActivity extends AppCompatActivity {
 
-    GooglePlayRecyclerView googlePlayRecyclerView;
+    GPlayRecyclerView gPlayRecyclerView;
 
-    private int mScreenWidth = 0;
-    private int mHeaderItemWidth = 0;
-    private int mCellWidth = 0;
-    private LinearLayoutManager mLLM;
-    private int firstItemPosition = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,12 +35,11 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        googlePlayRecyclerView = findViewById(R.id.google_play_rv);
-        googlePlayRecyclerView.setAdatper(new GAdapter());
-        googlePlayRecyclerView.getAdapter().notifyDataSetChanged();
-        googlePlayRecyclerView = findViewById(R.id.google_play_rv_2);
-        googlePlayRecyclerView.setAdatper(new GAdapter());
-        googlePlayRecyclerView.getAdapter().notifyDataSetChanged();
+        gPlayRecyclerView = findViewById(R.id.google_play_rv);
+        gPlayRecyclerView.setAdatper(new GAdapter());
+        gPlayRecyclerView.getAdapter().notifyDataSetChanged();
+        gPlayRecyclerView = findViewById(R.id.google_play_rv_2);
+        gPlayRecyclerView.setAdatper(new GAdapter());
     }
 
     @Override
