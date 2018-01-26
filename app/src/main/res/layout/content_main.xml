@@ -12,14 +12,13 @@
         android:id="@+id/google_play_rv"
         android:layout_width="match_parent"
         android:layout_height="175dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        app:background_step="4"
+        app:end_background_alpha="0.5"
+        app:end_background_offset="-50dp"
+        app:image="@drawable/test"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:start_background_offset="15dp"
-        app:end_background_offset="-50dp"
-        app:end_background_alpha="0.5"
-        app:background_step="4"
-        app:image="@drawable/test"
         app:start_offset="56dp" />
 
     <com.timelesssoftware.gplayrecyclerview.GPlayRecyclerView
@@ -33,7 +32,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/google_play_rv"
         app:start_background_offset="15dp"
-        app:end_background_offset="-35dp"
+        app:end_background_offset="-1dp"
         app:end_background_alpha="0.1"
         app:background_step="2"
         app:image_scale="0.7"

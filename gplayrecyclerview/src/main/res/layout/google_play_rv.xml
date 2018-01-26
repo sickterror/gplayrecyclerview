@@ -15,7 +15,8 @@
         android:cropToPadding="true"
         android:scaleType="centerCrop"
         android:scaleX="0.8"
-        android:scaleY="0.8" />
+        android:scaleY="0.8"
+       />
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/gp_rv"

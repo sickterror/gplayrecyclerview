@@ -1,12 +1,16 @@
 package com.timelesssoftware.gplayrecyclerview;
 
+import android.graphics.Color;
+import android.graphics.Point;
 import android.graphics.PointF;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.OrientationHelper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.SnapHelper;
 import android.util.Log;
+import android.view.Display;
 import android.view.View;
 import android.view.animation.DecelerateInterpolator;
 import android.widget.Scroller;
@@ -20,6 +24,11 @@ public class GLinearSnapHelper extends SnapHelper {
     private int maxX = 2000;
     private int minY = -2000;
     private int maxY = 2000;
+    private static final float VIEW_HALF_VISIBLE = 0.5f;
+    public int firstItemSnapThreshold = 500;
+
+    public int startingOffset = 0;
+    public int itemPadding = 0;
     // Orientation helpers are lazily created per LayoutManager.
     @Nullable
     private OrientationHelper mVerticalHelper;
@@ -30,8 +39,6 @@ public class GLinearSnapHelper extends SnapHelper {
     public int[] calculateDistanceToFinalSnap(
             @NonNull RecyclerView.LayoutManager layoutManager, @NonNull View targetView) {
         int position = layoutManager.getPosition(targetView);
-
-        Log.d("position", position + "");
         int[] out = new int[2];
         if (layoutManager.canScrollHorizontally()) {
             out[0] = distanceToCenter(layoutManager, targetView,
@@ -46,14 +53,31 @@ public class GLinearSnapHelper extends SnapHelper {
         } else {
             out[1] = 0;
         }
-        if(position == 0){
-            final int childCenter = getHorizontalHelper(layoutManager).getDecoratedStart(targetView)
-                    + (getHorizontalHelper(layoutManager).getDecoratedMeasurement(targetView) / 2);
-            if(childCenter > 500){
-                out[0] = -300;
+        //Check if this is the first position
+        final int childCenter = getHorizontalHelper(layoutManager).getDecoratedStart(targetView)
+                + (getHorizontalHelper(layoutManager).getDecoratedMeasurement(targetView) / 2);
+        //Get the center
+        if (position == 0) {
+
+            //Snap back if the position is higher than half of the start padding
+            if (childCenter > (startingOffset / 2)) {
+                out[0] = -findFirstPositionSnap(targetView);
             }
         }
+
+
+        //The padding of the itemViewHolder
+        out[0] -= itemPadding;
+
+        if(position == (layoutManager.getItemCount() - 1)){
+            out[0] -= 1000;
+        }
         return out;
+    }
+
+    private int findFirstPositionSnap(View targetView) {
+        int firstItemLeft = targetView.getLeft();
+        return startingOffset - firstItemLeft;
     }
 
     @Override
@@ -136,17 +160,6 @@ public class GLinearSnapHelper extends SnapHelper {
 
     private int distanceToCenter(@NonNull RecyclerView.LayoutManager layoutManager,
                                  @NonNull View targetView, OrientationHelper helper) {
-        final int childCenter = helper.getDecoratedStart(targetView)
-                + (helper.getDecoratedMeasurement(targetView) / 2);
-        final int containerCenter;
-        if (layoutManager.getClipToPadding()) {
-            containerCenter = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
-        } else {
-            containerCenter = helper.getEnd() / 2;
-        }
-        Log.d("target", helper.getStartAfterPadding() + " / " + helper.getEnd());
-        Log.d("test", containerCenter + "  /  " + childCenter + " / " + (childCenter - containerCenter));
-        //Split containerCenter at half so we get the start of container
         return targetView.getLeft();
     }
 
@@ -193,7 +206,7 @@ public class GLinearSnapHelper extends SnapHelper {
         if (layoutManager.getClipToPadding()) {
             center = helper.getStartAfterPadding() + helper.getTotalSpace() / 2;
         } else {
-            center = helper.getEnd() / 2;
+            center = helper.getEndPadding() / 2;
         }
         int absClosest = Integer.MAX_VALUE;
 
@@ -295,5 +308,33 @@ public class GLinearSnapHelper extends SnapHelper {
         out[1] = scroller.getFinalY();
         Log.d("test", "" + out[0] + "/" + out[1]);
         return out;
+    }
+
+    public void setFirstItemSnapThreshold(int firstItemSnapThreshold) {
+        this.firstItemSnapThreshold = firstItemSnapThreshold;
+    }
+
+    @Nullable
+    private View findEndView(final RecyclerView.LayoutManager layoutManager, final OrientationHelper orientationHelper) {
+        View targetView = null;
+        if (layoutManager instanceof LinearLayoutManager) {
+            final int lastChildPos = ((LinearLayoutManager) layoutManager).findLastVisibleItemPosition();
+            if (lastChildPos != RecyclerView.NO_POSITION) {
+                final View lastView = layoutManager.findViewByPosition(lastChildPos);
+                float visibleWidth = (float) orientationHelper.getTotalSpace() - orientationHelper.getDecoratedStart(lastView) / orientationHelper.getDecoratedMeasurement(lastView);
+
+                if (visibleWidth > VIEW_HALF_VISIBLE) {
+                    targetView = lastView;
+                } else {
+                    // If we're at the start of the list, we shouldn't snap
+                    // to avoid having the first item not completely visible.
+                    boolean startOfList = ((LinearLayoutManager) layoutManager).findFirstCompletelyVisibleItemPosition() == 0;
+                    if (!startOfList) {
+                        targetView = layoutManager.findViewByPosition(lastChildPos - 1);
+                    }
+                }
+            }
+        }
+        return targetView;
     }
 }

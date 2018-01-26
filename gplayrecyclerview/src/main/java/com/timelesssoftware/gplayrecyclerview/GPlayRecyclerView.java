@@ -4,16 +4,18 @@ import android.content.Context;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.LinearSnapHelper;
 import android.support.v7.widget.RecyclerView;
+import android.support.v7.widget.SnapHelper;
 import android.util.AttributeSet;
-import android.view.Gravity;
+import android.util.Log;
+import android.util.SparseArray;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.RelativeLayout;
-
-import com.github.rubensousa.gravitysnaphelper.GravityPagerSnapHelper;
-import com.github.rubensousa.gravitysnaphelper.GravitySnapHelper;
 
 /**
  * Created by Luka on 24.1.2018.
@@ -30,8 +32,8 @@ public class GPlayRecyclerView extends RelativeLayout {
      */
     public int backgroundThreshold;
     /**
-     * The End background alpha.
-     * This is the alpha of the image on the end of its path
+     * The End background backgroundImageAlpha.
+     * This is the backgroundImageAlpha of the image on the end of its path
      */
     public float endBackgroundAlpha;
     /**
@@ -42,7 +44,7 @@ public class GPlayRecyclerView extends RelativeLayout {
     /**
      * The Start background offset.
      *
-     * @gBackround stargin offset. The margin from which the image stars moving
+     * @gBackround stargin offset. The scrollState from which the image stars moving
      */
     public int startBackgroundOffset;
     /**
@@ -59,6 +61,11 @@ public class GPlayRecyclerView extends RelativeLayout {
     private LinearLayoutManager layout;
     private Drawable gDrawable;
     private int scrollOfset = 0;
+    private int backgroundImageAlpha;
+    private boolean enableBacgroundAlpha = true;
+    private boolean enableBackgroundMove = true;
+
+    private boolean readFromState = false;
 
     /**
      * Instantiates a new Google play recycler view.
@@ -78,7 +85,7 @@ public class GPlayRecyclerView extends RelativeLayout {
      */
     public GPlayRecyclerView(Context context, AttributeSet attrs) {
         super(context, attrs);
-
+        setSaveEnabled(true);
         TypedArray typedArray = context.getTheme().obtainStyledAttributes(
                 attrs,
                 R.styleable.GPlayRecyclerView,
@@ -103,6 +110,7 @@ public class GPlayRecyclerView extends RelativeLayout {
         typedArray.recycle();
     }
 
+
     private void init(Context context) {
         rootView = inflate(context, R.layout.google_play_rv, this);
         gRecyclerView = rootView.findViewById(R.id.gp_rv);
@@ -111,16 +119,30 @@ public class GPlayRecyclerView extends RelativeLayout {
         gBackground.setImageDrawable(gDrawable);
         gBackground.setScaleX(imageScale);
         gBackground.setScaleY(imageScale);
+
         layout = new LinearLayoutManager(getContext(), LinearLayoutManager.HORIZONTAL, false);
         gRecyclerView.setLayoutManager(layout);
         gRecyclerView.addOnScrollListener(onScrollListener);
         setMarginsToChild(gBackground, startBackgroundOffset);
         mainLayout.setBackgroundColor(backgroundColor);
         gRecyclerView.addItemDecoration(new PaddingItemDecoration(startOffset));
-        new GLinearSnapHelper().attachToRecyclerView(getgRecyclerView());
-        //new GravityPagerSnapHelper(Gravity.START).attachToRecyclerView(getgRecyclerView());
     }
 
+    private void drawImage() {
+        gBackground = new ImageView(getContext());
+        gBackground.setId(generateViewId());
+        gBackground.setImageDrawable(gDrawable);
+        gBackground.setScaleX(imageScale);
+        gBackground.setScaleY(imageScale);
+        RelativeLayout.LayoutParams lp = new RelativeLayout.LayoutParams(
+                RelativeLayout.LayoutParams.WRAP_CONTENT,
+                RelativeLayout.LayoutParams.WRAP_CONTENT);
+        mainLayout.addView(gBackground, lp);
+    }
+
+    private void drawRecylcerView() {
+
+    }
 
     /**
      * Sets adatper.
@@ -149,6 +171,7 @@ public class GPlayRecyclerView extends RelativeLayout {
         return gRecyclerView;
     }
 
+
     /**
      * Sets google play recycler view scroll listener.
      *
@@ -157,7 +180,6 @@ public class GPlayRecyclerView extends RelativeLayout {
     public void setgPlayScrollListener(GPlayScrollListener gPlayScrollListener) {
         this.gPlayScrollListener = gPlayScrollListener;
     }
-
 
     /**
      * Converts dp into pixels
@@ -170,7 +192,7 @@ public class GPlayRecyclerView extends RelativeLayout {
     }
 
     /**
-     * Sets left margin to child
+     * Sets left scrollState to child
      *
      * @param v
      * @param margin
@@ -194,21 +216,31 @@ public class GPlayRecyclerView extends RelativeLayout {
             super.onScrolled(recyclerView, dx, dy);
             if (gPlayScrollListener != null)
                 gPlayScrollListener.onScrolled(recyclerView, dx, dy);
-
             int marginToAnimate = scrollOfset / backgroundThreshold;
-            LayoutParams params = (LayoutParams) gBackground.getLayoutParams();
-            params.leftMargin = startBackgroundOffset - marginToAnimate;
             //No need to change values
-            if (params.leftMargin >= endOffsetMargin) {
-                gBackground.setLayoutParams(params);
-                int alpha = calculateAlpha(startOffset - recyclerView.computeHorizontalScrollOffset());
-                gBackground.setAlpha(alpha);
+            int leftThreshold = Math.abs(endOffsetMargin - startOffset);
+            if (scrollOfset < leftThreshold) {
+                if (enableBackgroundMove) {
+                    LayoutParams params = (LayoutParams) gBackground.getLayoutParams();
+                    params.leftMargin = startBackgroundOffset - marginToAnimate;
+                    gBackground.setLayoutParams(params);
+                }
+                if (enableBacgroundAlpha) {
+                    backgroundImageAlpha = calculateAlpha(startOffset - recyclerView.computeHorizontalScrollOffset());
+                    gBackground.setAlpha(backgroundImageAlpha);
+                }
             }
             //Ge the scroll offset of the first itemViewHolder
             scrollOfset += dx;
         }
     };
 
+    /**
+     * Calculates the alpha from the distance of scroll
+     *
+     * @param currentMargin
+     * @return
+     */
     private int calculateAlpha(float currentMargin) {
         int endOffset = (endOffsetMargin < 0 ? -endOffsetMargin : endOffsetMargin);
         float calc = ((currentMargin + endOffset) / (startOffset + endOffset));
@@ -218,6 +250,9 @@ public class GPlayRecyclerView extends RelativeLayout {
     }
 
 
+    /**
+     * Padding decorator
+     */
     private class PaddingItemDecoration extends RecyclerView.ItemDecoration {
         private final int size;
 
@@ -256,5 +291,152 @@ public class GPlayRecyclerView extends RelativeLayout {
          */
         void onScrolled(RecyclerView recyclerView, int dx, int dy);
 
+    }
+
+    /**
+     * Debug method
+     */
+    public void getState() {
+        Log.d(TAG, "state -> " +
+                "startOffset: " + startBackgroundOffset +
+                " endOffset: " + endOffsetMargin +
+                " startBackgroundOffset: " + startBackgroundOffset +
+                " endBackgroundAlpha: " + endBackgroundAlpha +
+                " currentBackgroundLeft " + gBackground.getLeft() +
+                " scrollOffset " + scrollOfset
+        );
+    }
+
+    @Override
+    public Parcelable onSaveInstanceState() {
+        Parcelable superState = super.onSaveInstanceState();
+        SavedState ss = new SavedState(superState);
+        ss.childrenStates = new SparseArray();
+        State state = new State();
+        state.scrollState = scrollOfset;
+        state.backgroundOffset = gBackground.getLeft();
+        state.backgroundAlpha = backgroundImageAlpha;
+        for (int i = 0; i < getChildCount(); i++) {
+            ss.childrenStates.append(i, state);
+            getChildAt(i).saveHierarchyState(ss.childrenStates);
+        }
+        return ss;
+    }
+
+    @Override
+    public void onRestoreInstanceState(Parcelable state) {
+        SavedState ss = (SavedState) state;
+        super.onRestoreInstanceState(ss.getSuperState());
+        for (int i = 0; i < getChildCount(); i++) {
+            State stateO = (State) ss.childrenStates.get(i);
+            scrollOfset = stateO.scrollState;
+            this.setgBackgroundPosition(stateO.backgroundOffset);
+            gBackground.setAlpha(stateO.backgroundAlpha);
+            getChildAt(i).restoreHierarchyState(ss.childrenStates);
+        }
+    }
+
+    @Override
+    protected void dispatchSaveInstanceState(SparseArray<Parcelable> container) {
+        dispatchFreezeSelfOnly(container);
+    }
+
+    @Override
+    protected void dispatchRestoreInstanceState(SparseArray<Parcelable> container) {
+        dispatchThawSelfOnly(container);
+    }
+
+    static class SavedState extends BaseSavedState {
+        SparseArray childrenStates;
+
+        SavedState(Parcelable superState) {
+            super(superState);
+        }
+
+        private SavedState(Parcel in, ClassLoader classLoader) {
+            super(in);
+            childrenStates = in.readSparseArray(classLoader);
+        }
+
+        @Override
+        public void writeToParcel(Parcel out, int flags) {
+            super.writeToParcel(out, flags);
+            out.writeSparseArray(childrenStates);
+        }
+
+        public static final ClassLoaderCreator<SavedState> CREATOR
+                = new ClassLoaderCreator<SavedState>() {
+            @Override
+            public SavedState createFromParcel(Parcel source, ClassLoader loader) {
+                return new SavedState(source, loader);
+            }
+
+            @Override
+            public SavedState createFromParcel(Parcel source) {
+                return createFromParcel(source, null);
+            }
+
+            public SavedState[] newArray(int size) {
+                return new SavedState[size];
+            }
+        };
+    }
+
+    private void setgBackgroundPosition(int left) {
+        LayoutParams params = (LayoutParams) gBackground.getLayoutParams();
+        params.leftMargin = left;
+        gBackground.setLayoutParams(params);
+    }
+
+    /**
+     * Enables or disables the alpha animation
+     *
+     * @param enableBacgroundAlpha
+     */
+    public void setEnableBacgroundAlpha(boolean enableBacgroundAlpha) {
+        this.enableBacgroundAlpha = enableBacgroundAlpha;
+    }
+
+    /**
+     * Enables or disables the background animation
+     *
+     * @param enableBackgroundMove
+     */
+    public void setEnableBackgroundMove(boolean enableBackgroundMove) {
+        this.enableBackgroundMove = enableBackgroundMove;
+    }
+
+    /**
+     * Sets the background color of the main view
+     *
+     * @param color
+     */
+    public void setViewBackgroundColor(int color) {
+        this.mainLayout.setBackgroundColor(color);
+    }
+
+    /**
+     * Sets a custom snap helper to recyclerView
+     *
+     * @param snapHelper
+     */
+    public void setSnapHelper(SnapHelper snapHelper) {
+        snapHelper.attachToRecyclerView(gRecyclerView);
+    }
+
+    /**
+     * Enables the default snap helper, that mimics the google play recylcer view
+     */
+    public void enableDefaultSnapHelper() {
+        GLinearSnapHelper gLinearSnapHelper = new GLinearSnapHelper();
+        gLinearSnapHelper.startingOffset = startOffset;
+        gLinearSnapHelper.itemPadding = dpToPixels(16);
+        setSnapHelper(gLinearSnapHelper);
+            }
+
+    private class State {
+        public int scrollState;
+        public int backgroundOffset;
+        public int backgroundAlpha;
     }
 }

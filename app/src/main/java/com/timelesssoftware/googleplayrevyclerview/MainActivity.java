@@ -4,7 +4,6 @@ import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.view.LayoutInflater;
@@ -18,7 +17,8 @@ import com.timelesssoftware.gplayrecyclerview.GPlayRecyclerView;
 
 public class MainActivity extends AppCompatActivity {
 
-    GPlayRecyclerView gPlayRecyclerView;
+    GPlayRecyclerView gPlayRecyclerView_large;
+    private GPlayRecyclerView gPlayRecyclerView_small;
 
 
     @Override
@@ -35,11 +35,18 @@ public class MainActivity extends AppCompatActivity {
                         .setAction("Action", null).show();
             }
         });
-        gPlayRecyclerView = findViewById(R.id.google_play_rv);
-        gPlayRecyclerView.setAdatper(new GAdapter());
-        gPlayRecyclerView.getAdapter().notifyDataSetChanged();
-        gPlayRecyclerView = findViewById(R.id.google_play_rv_2);
-        gPlayRecyclerView.setAdatper(new GAdapter());
+        gPlayRecyclerView_small = findViewById(R.id.google_play_rv);
+        gPlayRecyclerView_small.setAdatper(new GAdapter(R.layout._g_view_holder));
+        gPlayRecyclerView_small.getAdapter().notifyDataSetChanged();
+        gPlayRecyclerView_small.getState();
+        gPlayRecyclerView_small.enableDefaultSnapHelper();
+
+        gPlayRecyclerView_large = findViewById(R.id.google_play_rv_2);
+        gPlayRecyclerView_large.setAdatper(new GAdapter(R.layout._g_view_holder_2));
+        gPlayRecyclerView_large.getAdapter().notifyDataSetChanged();
+        gPlayRecyclerView_large.getState();
+        gPlayRecyclerView_large.setEnableBacgroundAlpha(false);
+        gPlayRecyclerView_large.setEnableBackgroundMove(false);
     }
 
     @Override
@@ -66,9 +73,15 @@ public class MainActivity extends AppCompatActivity {
 
     class GAdapter extends RecyclerView.Adapter<GAdapter.GVHolder> {
 
+        private final int viewId;
+
+        public GAdapter(int view) {
+            this.viewId = view;
+        }
+
         @Override
         public GAdapter.GVHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout._g_view_holder, parent, false);
+            View view = LayoutInflater.from(parent.getContext()).inflate(this.viewId, parent, false);
             return new GVHolder(view);
         }
 
@@ -79,7 +92,7 @@ public class MainActivity extends AppCompatActivity {
 
         @Override
         public int getItemCount() {
-            return 30;
+            return 10;
         }
 
         public class GVHolder extends RecyclerView.ViewHolder {
