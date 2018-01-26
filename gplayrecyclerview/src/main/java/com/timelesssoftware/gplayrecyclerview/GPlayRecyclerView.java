@@ -358,12 +358,6 @@ public class GPlayRecyclerView extends RelativeLayout {
             childrenStates = in.readSparseArray(classLoader);
         }
 
-        @Override
-        public void writeToParcel(Parcel out, int flags) {
-            super.writeToParcel(out, flags);
-            out.writeSparseArray(childrenStates);
-        }
-
         public static final ClassLoaderCreator<SavedState> CREATOR
                 = new ClassLoaderCreator<SavedState>() {
             @Override

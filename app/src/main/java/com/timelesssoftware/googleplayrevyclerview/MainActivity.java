@@ -1,5 +1,6 @@
 package com.timelesssoftware.googleplayrevyclerview;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
@@ -31,8 +32,7 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+                startActivity(new Intent(MainActivity.this, Main2Activity.class));
             }
         });
         gPlayRecyclerView_small = findViewById(R.id.google_play_rv);
@@ -47,6 +47,8 @@ public class MainActivity extends AppCompatActivity {
         gPlayRecyclerView_large.getState();
         gPlayRecyclerView_large.setEnableBacgroundAlpha(false);
         gPlayRecyclerView_large.setEnableBackgroundMove(false);
+
+
     }
 
     @Override
